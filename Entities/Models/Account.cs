@@ -5,8 +5,9 @@
     using System.ComponentModel.DataAnnotations.Schema;
 
     [Table("account")]
-    public class Account
+    public class Account : IEntity
     {
+        [Key]
         [Column("AccountId")]
         public Guid Id { get; set; }
 

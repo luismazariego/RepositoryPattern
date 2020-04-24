@@ -8,8 +8,10 @@
     using Contracts;
 
     using Entities.DataTransferObjects;
+    using Entities.Extensions;
     using Entities.Models;
     using Microsoft.AspNetCore.Mvc;
+    using Newtonsoft.Json;
 
     [Route("api/owner")]
     [ApiController]
@@ -26,6 +28,28 @@
             _logger = logger;
             _repository = repository;
             _mapper = mapper;
+        }
+
+        [HttpGet]
+        public IActionResult GetOwners([FromQuery] OwnerParameters ownerParameters)
+        {
+            var owners = _repository.Owner.GetOwners(ownerParameters);
+        
+            var metadata = new
+            {
+                owners.TotalCount,
+                owners.PageSize,
+                owners.CurrentPage,
+                owners.TotalPages,
+                owners.HasNext,
+                owners.HasPrevious
+            };
+        
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
+        
+            _logger.LogInfo($"Returned {owners.TotalCount} owners from database.");
+        
+            return Ok(owners);
         }
 
         [HttpGet]
@@ -55,7 +79,7 @@
             {
                 var owner = _repository.Owner.GetOwnerById(id);
 
-                if (owner == null)
+                if (owner.IsEmptyObject())
                 {
                     _logger.LogError($"Owner with id: {id}, hasn't been found in db.");
                     return NotFound();
@@ -179,7 +203,7 @@
             try
             {
                 var owner = _repository.Owner.GetOwnerById(id);
-                if (owner == null)
+                if (owner.IsEmptyObject())
                 {
                     _logger.LogError($"Owner with id: {id}, hasn't been found in db.");
                     return NotFound();

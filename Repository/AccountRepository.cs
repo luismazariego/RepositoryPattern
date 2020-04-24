@@ -1,6 +1,7 @@
 ﻿namespace Repository
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
 
     using Contracts;
@@ -14,6 +15,11 @@
         public AccountRepository(RepositoryContext repositoryContext)
             : base(repositoryContext)
         {
+        }
+
+        public IEnumerable<Account> AccountsByOwner(Guid ownerId)
+        {
+            return FindByCondition(a => a.OwnerId.Equals(ownerId)).ToList();
         }
 
         public PagedList<Account> GetAccountsByOwner(Guid ownerId, AccountParameters parameters)

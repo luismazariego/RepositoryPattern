@@ -6,8 +6,9 @@
     using System.ComponentModel.DataAnnotations.Schema;
 
     [Table("owner")]
-    public class Owner
+    public class Owner : IEntity
     {
+        [Key]
         [Column("OwnerId")]
         public Guid Id { get; set; }
 
