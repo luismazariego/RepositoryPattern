@@ -7,7 +7,7 @@ namespace AccountOwnerServer.Controllers
     using Microsoft.AspNetCore.Mvc;
     using Newtonsoft.Json;
 
-    [Route("api/owner")]
+    [Route("api/account")]
     [ApiController]
     public class AccountController : ControllerBase
     {
