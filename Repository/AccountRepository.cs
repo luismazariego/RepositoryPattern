@@ -12,9 +12,13 @@
 
     public class AccountRepository : RepositoryBase<Account>, IAccountRepository
     {
-        public AccountRepository(RepositoryContext repositoryContext)
+        private readonly ISortHelper<Account> _sortHelper;
+
+        public AccountRepository(RepositoryContext repositoryContext,
+            ISortHelper<Account> sortHelper)
             : base(repositoryContext)
         {
+            _sortHelper = sortHelper;
         }
 
         public IEnumerable<Account> AccountsByOwner(Guid ownerId)
