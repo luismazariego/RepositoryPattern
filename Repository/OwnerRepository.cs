@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Dynamic;
     using System.Linq;
     using System.Linq.Dynamic.Core;
     using System.Reflection;
@@ -16,25 +17,28 @@
     public class OwnerRepository : RepositoryBase<Owner>, IOwnerRepository
     {
         private readonly ISortHelper<Owner> _sortHelper;
+        private readonly IDataShaper<Owner> _dataShaper;
 
         public OwnerRepository(RepositoryContext repositoryContext,
-            ISortHelper<Owner> sortHelper)
+            ISortHelper<Owner> sortHelper,
+            IDataShaper<Owner> dataShaper)
             : base(repositoryContext)
         {
             _sortHelper = sortHelper;
+            _dataShaper = dataShaper;
         }
 
-        public PagedList<Owner> GetOwners(OwnerParameters ownerParameters)
+        public PagedList<ExpandoObject> GetOwners(OwnerParameters ownerParameters)
         {
             var owners = FindByCondition(o => o.DateOfBirth.Year >= ownerParameters.MinYearOfBirth &&
-								o.DateOfBirth.Year <= ownerParameters.MaxYearOfBirth);
-							
+                                        o.DateOfBirth.Year <= ownerParameters.MaxYearOfBirth);
 
             SearchByName(ref owners, ownerParameters.Name);
 
             var sortedOwners = _sortHelper.ApplySort(owners, ownerParameters.OrderBy);
+            var shapedOwners = _dataShaper.ShapeData(sortedOwners, ownerParameters.Fields);
 
-            return PagedList<Owner>.ToPagedList(sortedOwners,
+            return PagedList<ExpandoObject>.ToPagedList(shapedOwners,
                 ownerParameters.PageNumber,
                 ownerParameters.PageSize);
         }
@@ -43,8 +47,12 @@
         {
             if (!owners.Any() || string.IsNullOrWhiteSpace(name))
 		        return;
+
+            if (string.IsNullOrEmpty(name))
+				return;
+
  
-	        owners = (IQueryable<Owner>)owners
+	        owners = owners
                 .Where(o => o.Name.ToLower().Contains(name.Trim().ToLower()));
         }        
 
@@ -55,11 +63,21 @@
                 .ToList();
         }
 
-        public Owner GetOwnerById(Guid ownerId)
+        public ExpandoObject GetOwnerById(Guid ownerId, string fields)
         {
-            return FindByCondition(owner => owner.Id.Equals(ownerId))
-                    .FirstOrDefault();
+            var owner = FindByCondition(owner => owner.Id.Equals(ownerId))
+                .DefaultIfEmpty(new Owner())
+                .FirstOrDefault();
+        
+            return _dataShaper.ShapeData(owner, fields);
         }
+
+        public Owner GetOwnerById(Guid ownerId)
+		{
+			return FindByCondition(owner => owner.Id.Equals(ownerId))
+				.DefaultIfEmpty(new Owner())
+				.FirstOrDefault();
+		}
 
         public Owner GetOwnerWithDetails(Guid ownerId)
         {

@@ -12,14 +12,21 @@
         private IAccountRepository _account;
         private ISortHelper<Owner> _ownerSortHelper;
 	    private ISortHelper<Account> _accountSortHelper;
+        private IDataShaper<Account> _accountDataShaper;
+        private IDataShaper<Owner> _ownerDataShaper;
 
         public RepositoryWrapper(RepositoryContext repositoryContext,
             ISortHelper<Owner> ownerSortHelper,
-		    ISortHelper<Account> accountSortHelper)
+		    ISortHelper<Account> accountSortHelper,
+            IDataShaper<Owner> ownerDataShaper,
+            IDataShaper<Account> accountDataShaper
+            )
         {
             _repoContext = repositoryContext;
             _ownerSortHelper = ownerSortHelper;
             _accountSortHelper = accountSortHelper;
+            _ownerDataShaper = ownerDataShaper;
+		    _accountDataShaper = accountDataShaper;
         }
 
         public IOwnerRepository Owner
@@ -28,7 +35,7 @@
             {
                 if (_owner == null)
                 {
-                    _owner = new OwnerRepository(_repoContext, _ownerSortHelper);
+                    _owner = new OwnerRepository(_repoContext, _ownerSortHelper, _ownerDataShaper);
                 }
 
                 return _owner;

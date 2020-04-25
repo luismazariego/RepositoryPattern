@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Dynamic;
     using System.Linq;
     using AutoMapper;
 
@@ -78,31 +79,45 @@
             }
         }
 
+        // [HttpGet("{id}", Name = "OwnerById")]
+        // public IActionResult GetOwnerById(Guid id)
+        // {
+        //     try
+        //     {
+        //         var owner = _repository.Owner.GetOwnerById(id);
+
+        //         if (owner.IsEmptyObject())
+        //         {
+        //             _logger.LogError($"Owner with id: {id}, hasn't been found in db.");
+        //             return NotFound();
+        //         }
+        //         else
+        //         {
+        //             _logger.LogInfo($"Returned owner with id: {id}");
+
+        //             var ownerResult = _mapper.Map<OwnerDto>(owner);
+        //             return Ok(ownerResult);
+        //         }
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError($"Something went wrong inside GetOwnerById action: {ex.Message}");
+        //         return StatusCode(500, "Internal server error");
+        //     }
+        // }
+
         [HttpGet("{id}", Name = "OwnerById")]
-        public IActionResult GetOwnerById(Guid id)
+        public IActionResult GetOwnerById(Guid id, [FromQuery] string fields)
         {
-            try
+            var owner = _repository.Owner.GetOwnerById(id, fields);
+        
+            if (owner == default(ExpandoObject))
             {
-                var owner = _repository.Owner.GetOwnerById(id);
-
-                if (owner.IsEmptyObject())
-                {
-                    _logger.LogError($"Owner with id: {id}, hasn't been found in db.");
-                    return NotFound();
-                }
-                else
-                {
-                    _logger.LogInfo($"Returned owner with id: {id}");
-
-                    var ownerResult = _mapper.Map<OwnerDto>(owner);
-                    return Ok(ownerResult);
-                }
+                _logger.LogError($"Owner with id: {id}, hasn't been found in db.");
+                return NotFound();
             }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Something went wrong inside GetOwnerById action: {ex.Message}");
-                return StatusCode(500, "Internal server error");
-            }
+        
+            return Ok(owner);
         }
 
         [HttpGet("{id}/account")]
